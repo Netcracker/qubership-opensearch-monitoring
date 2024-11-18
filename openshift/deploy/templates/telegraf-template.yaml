@@ -1,0 +1,201 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: elasticsearch-monitoring-template
+  annotations:
+    description: Elasticsearch-Monitoring template
+objects:
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: ${SERVICE_NAME}
+  spec:
+    ports:
+    - name: elasticsearch-monitoring-statsd
+      port: 8125
+      protocol: TCP
+    - name: elasticsearch-monitoring-tcp
+      port: 8094
+      protocol: TCP
+    - name: elasticsearch-monitoring-udp
+      port: 8092
+      protocol: UDP
+    selector:
+      component: elasticsearch-monitoring
+      name: ${SERVICE_NAME}
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    name: ${SERVICE_NAME}
+  spec:
+    strategy:
+      type: Recreate
+    triggers:
+    - type: ConfigChange
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          name: ${SERVICE_NAME}
+          component: elasticsearch-monitoring
+      spec:
+        affinity:
+          ${POD_AFFINITY}
+          ${POD_ANTI_AFFINITY}
+          ${NODE_LABELS}
+        containers:
+        - name: elasticsearch-monitoring
+          image: ${IMAGE}
+          ports:
+          - containerPort: 8125
+            protocol: TCP
+          - containerPort: 8094
+            protocol: TCP
+          - containerPort: 8092
+            protocol: UDP
+          env:
+          - name: SM_DB_HOST
+            value: '${SM_DB_HOST}'
+          - name: SM_DB_NAME
+            value: '${SM_DB_NAME}'
+          - name: SM_DB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: ${SERVICE_NAME}-secret
+                key: sm-db-username
+          - name: SM_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ${SERVICE_NAME}-secret
+                key: sm-db-password
+          - name: ELASTICSEARCH_HOST
+            value: '${ELASTICSEARCH_HOST}'
+          - name: ELASTICSEARCH_PORT
+            value: '${ELASTICSEARCH_PORT}'
+          - name: ELASTICSEARCH_DBAAS_ADAPTER_HOST
+            value: '${ELASTICSEARCH_DBAAS_ADAPTER_HOST}'
+          - name: ELASTICSEARCH_DBAAS_ADAPTER_PORT
+            value: '${ELASTICSEARCH_DBAAS_ADAPTER_PORT}'
+          - name: ELASTICSEARCH_DATA_NODES_COUNT
+            value: '${ELASTICSEARCH_DATA_NODES_COUNT}'
+          - name: ELASTICSEARCH_TOTAL_NODES_COUNT
+            value: '${ELASTICSEARCH_TOTAL_NODES_COUNT}'
+          - name: ELASTICSEARCH_EXEC_PLUGIN_TIMEOUT
+            value: '${ELASTICSEARCH_EXEC_PLUGIN_TIMEOUT}'
+          - name: OS_PROJECT
+            value: '${OS_PROJECT}'
+          - name: ELASTICSEARCH_PROTOCOL
+            value: '${ELASTICSEARCH_PROTOCOL}'
+          - name: ELASTICSEARCH_CREDENTIALS
+            valueFrom:
+              secretKeyRef:
+                name: ${ES_SECRET_NAME}
+                key: es-cred-for-internal-clients
+          resources:
+            requests:
+              cpu: ${CPU_REQUEST}
+              memory: ${MEMORY_REQUEST}
+            limits:
+              cpu: ${CPU_LIMIT}
+              memory: ${MEMORY_LIMIT}
+          volumeMounts:
+          - name: config
+            mountPath: /etc/telegraf
+          terminationMessagePath: /dev/termination-log
+          imagePullPolicy: Always
+        volumes:
+        - name: config
+          configMap:
+            name: ${SERVICE_NAME}-configuration
+            items:
+            - path: telegraf.conf
+              key: config
+parameters:
+- name: MEMORY_REQUEST
+  displayName: Memory Request
+  description: Minimum amount of memory the container should use.
+  value: 256Mi
+- name: CPU_REQUEST
+  displayName: CPU Request
+  description: Minimum amount of CPU the container should use
+  value: '200m'
+- name: MEMORY_LIMIT
+  displayName: Memory Limit
+  description: Maximum amount of memory the container can use.
+  value: 256Mi
+- name: CPU_LIMIT
+  displayName: CPU Limit
+  description: Maximum amount of CPU the container can use
+  value: '200m'
+- name: NAMESPACE
+  displayName: Namespace
+  description: The OpenShift Namespace where the ImageStream resides.
+  value: openshift
+- name: SERVICE_NAME
+  displayName: Database Service Name
+  description: The name of the OpenShift Service exposed for the database.
+  value: 'elasticsearch-monitoring'
+  required: true
+- name: NODE_LABELS
+  description: The value of the custom required node affinity rules.
+  required: false
+- name: REQUIRED_AFFINITY
+  description: The value of the custom required pod affinity rules.
+  required: false
+- name: PREFERRED_AFFINITY
+  description: The value of the custom preferred pod affinity rules.
+  value: 'component=elasticsearch'
+  required: false
+- name: REQUIRED_ANTI_AFFINITY
+  description: The value of the custom required pod anti-affinity rules.
+  value: 'component=elasticsearch-monitoring'
+  required: false
+- name: PREFERRED_ANTI_AFFINITY
+  description: The value of the custom preferred pod anti-affinity rules.
+  required: false
+- name: IMAGE
+  displayName: Telegraf Image
+  value: 'artifactorycn.netcracker.com:17023/telegraf/telegraf-elasticsearch:latest'
+  required: true
+- name: SM_DB_HOST
+  description: The host of the System Monitoring database.
+  value: 'http://influxdb:8086'
+  required: true
+- name: SM_DB_NAME
+  description: The name of the database in System Monitoring.
+  required: true
+- name: ELASTICSEARCH_HOST
+  displayName: Monitored elasticsearch hostname
+  value: "elasticsearch"
+  required: true
+- name: ELASTICSEARCH_PORT
+  displayName: Monitored elasticsearch http port
+  value: "9200"
+  required: true
+- name: ELASTICSEARCH_DBAAS_ADAPTER_HOST
+  displayName: Monitored DBaaS elasticsearch adapter hostname
+  value: "dbaas-elasticsearch-adapter"
+  required: true
+- name: ELASTICSEARCH_DBAAS_ADAPTER_PORT
+  displayName: Monitored DBaaS elasticsearch adapter http port
+  value: "8080"
+  required: true
+- name: ELASTICSEARCH_DATA_NODES_COUNT
+  displayName: Number of Elasticsearch data nodes. Required for smoke tests index settings.
+- name: ELASTICSEARCH_TOTAL_NODES_COUNT
+  displayName: Number of Elasticsearch data nodes. If information about failed nodes required.
+- name: ELASTICSEARCH_EXEC_PLUGIN_TIMEOUT
+  description: Value of timeout for Elasticsearch exec Telegraf plugin.
+  value: "15s"
+  required: true
+- name: OS_PROJECT
+  displayName: Name of OpenShift project
+- name: ELASTICSEARCH_PROTOCOL
+  description: Protocol of access to elasticsearch (http/https).
+  value: "http"
+  required: true
+- name: ES_SECRET_NAME
+  displayname: Secret name
+  description: Name of secret with elasitcsearch credentials
+  value: "elasticsearch-monitoring-secret"
+  required: true

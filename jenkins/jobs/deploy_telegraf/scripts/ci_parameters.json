@@ -1,0 +1,76 @@
+{
+  "parameter": [
+    {
+      "name": "DOCKER_IMAGE",
+      "value": "artifactorycn.netcracker.com:17023/search/elasticsearch-curator:latest"
+    },
+    {
+      "name": "OS_PROJECT",
+      "value": "elasticsearch-service"
+    },
+    {
+      "name": "OS_HOST",
+      "value": "https://ci-master.openshift.sdntest.netcracker.com:8443"
+    },
+    {
+      "name": "OS_ADMINISTRATOR_NAME",
+      "value": "admin"
+    },
+    {
+      "name": "OS_ADMINISTRATOR_PASSWORD",
+      "value": "admin"
+    },
+    {
+      "name": "NODE_LABELS",
+      "value": "region=primary"
+    },
+    {
+      "name": "MEMORY_REQUEST",
+      "value": "256Mi"
+    },
+    {
+      "name": "CPU_REQUEST",
+      "value": "200m"
+    },
+    {
+      "name": "MEMORY_LIMIT",
+      "value": "256Mi"
+    },
+    {
+      "name": "CPU_LIMIT",
+      "value": "200m"
+    },
+    {
+      "name": "SERVICE_NAME",
+      "value": "elasticsearch-monitoring"
+    },
+    {
+      "name": "ELASTICSEARCH_HOST",
+      "value": "elasticsearch"
+    },
+    {
+      "name": "ELASTICSEARCH_PORT",
+      "value": "9200"
+    },
+    {
+      "name": "SM_DB_HOST",
+      "value": "http://monitoring-ci.openshift.sdntest.netcracker.com:8086"
+    },
+    {
+      "name": "SM_DB_NAME",
+      "value": "cloud_ci_master_openshift_sdntest_netcracker_com"
+    },
+    {
+      "name": "ELASTICSEARCH_DATA_NODES_COUNT",
+      "value": "2"
+    },
+    {
+      "name": "ELASTICSEARCH_TOTAL_NODES_COUNT",
+      "value": "2"
+    },
+    {
+      "name": "ELASTICSEARCH_EXEC_PLUGIN_TIMEOUT",
+      "value": "15s"
+    }
+  ]
+}
