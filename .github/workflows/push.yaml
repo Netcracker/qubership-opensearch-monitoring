@@ -13,7 +13,6 @@ jobs:
         component:
           - name: elasticsearch-telegraf
             file: docker/Dockerfile
-            context: elasticsearch-telegraf
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
