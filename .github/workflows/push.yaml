@@ -12,7 +12,7 @@ jobs:
       matrix:
         component:
           - name: elasticsearch-telegraf
-            file: elasticsearch-telegraf/docker/Dockerfile
+            file: docker/Dockerfile
             context: elasticsearch-telegraf
     runs-on: ubuntu-latest
     steps:
