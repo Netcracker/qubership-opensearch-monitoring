@@ -76,7 +76,6 @@ def get_response_content(parameter: str, additional=''):
                  "status": "green",
                  "node.total": "2",
                  "node.data": "2",
-                 "discovered_master": "true",
                  "shards": "6",
                  "pri": "3",
                  "relo": "0",
